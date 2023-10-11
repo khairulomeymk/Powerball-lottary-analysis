@@ -1,0 +1,127 @@
+use Lotarypowerball
+
+SELECT TOP (1000) [Draw Date]
+      ,[Winning Numbers]
+      ,[Multiplier]
+  FROM [Lotarypowerball].[dbo].[PowerballWinning]
+
+
+  select * from PowerballWinning 
+  where convert(date,[Draw Date]) >= '01/01/2019'
+
+ select [Draw Date], [Winning Numbers] ,SUBSTRING([Winning Numbers], 1, CHARINDEX(' ', [Winning Numbers]) - 1) AS Powerball1,
+   SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1, CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) - CHARINDEX(' ', [Winning Numbers]) - 1) AS Powerball2,
+    SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1, CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) - CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) - 1) AS Powerball3,
+    SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1, CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) - CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) - 1) AS Powerball4,
+    SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) + 1, CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) + 1) - CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) - 1) AS Powerball5,
+    SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) + 1) + 1, LEN([Winning Numbers])) AS num6, Multiplier
+  into PowerballNumbers
+  from PowerballWinning
+
+  select max(powerball1), max(powerball1), max(Powerball2),max(Powerball3),max(Powerball4),max(Powerball5), max(num6), 
+  min(powerball1), min(powerball1), min(Powerball2),min(Powerball3),min(Powerball4),min(Powerball5), min(num6)
+  from PowerballNumbers
+  where convert(date,[Draw Date]) >= '01/01/2019' 
+  
+  select * from PowerballNumbers
+
+  select count(Powerball1), count(Powerball2) from PowerballNumbers
+  group by Powerball1, Powerball2
+
+  SELECT Number, COUNT(*) as Count
+FROM (
+    SELECT Powerball1 as Number FROM PowerballNumbers
+    UNION ALL
+    SELECT Powerball2 FROM PowerballNumbers
+    UNION ALL
+    SELECT Powerball3 FROM PowerballNumbers
+    UNION ALL
+    SELECT Powerball4 FROM PowerballNumbers
+    UNION ALL
+    SELECT Powerball5 FROM PowerballNumbers
+    UNION ALL
+    SELECT num6 FROM PowerballNumbers
+) AS UnpivotedData
+GROUP BY Number
+ORDER BY Count DESC;
+
+SELECT Powerball1 as Number, COUNT(*) as Count
+FROM PowerballNumbers
+GROUP BY Powerball1
+
+UNION ALL
+
+SELECT Powerball2 as Number, COUNT(*) as Count
+FROM PowerballNumbers
+GROUP BY Powerball2
+
+UNION ALL
+
+SELECT Powerball3 as Number, COUNT(*) as Count
+FROM PowerballNumbers
+GROUP BY Powerball3
+
+UNION ALL
+
+SELECT Powerball4 as Number, COUNT(*) as Count
+FROM PowerballNumbers
+GROUP BY Powerball4
+
+UNION ALL
+
+SELECT Powerball5 as Number, COUNT(*) as Count
+FROM PowerballNumbers
+GROUP BY Powerball5
+
+UNION ALL
+
+SELECT num6 as Number, COUNT(*) as Count
+FROM PowerballNumbers
+GROUP BY num6
+
+ORDER BY Number, Count DESC;
+
+SELECT Number, COUNT(*) AS Count
+FROM (
+    SELECT Powerball1, Powerball2, Powerball3, Powerball4, Powerball5, num6
+    FROM PowerballNumbers
+) AS Source
+UNPIVOT (
+    Number FOR Numbers IN (Powerball1, Powerball2, Powerball3, Powerball4, Powerball5, num6)
+) AS UnpivotedData
+GROUP BY Number
+ORDER BY Number;
+
+SELECT
+    ROW_NUMBER() OVER (ORDER BY Powerball1) AS Number,
+    Powerball1,
+    Powerball2,
+    Powerball3,
+    Powerball4,
+	Powerball5,
+	num6
+FROM PowerballNumbers
+ORDER BY Number;
+
+WITH AllNumbers AS (
+  SELECT 1 AS Number
+  UNION ALL
+  SELECT Number + 1
+  FROM AllNumbers
+  WHERE Number < 69
+)
+
+SELECT
+    n.Number,
+    SUM(CASE WHEN t.Powerball1 = n.Number THEN 1 ELSE 0 END) AS Powerball1,
+    SUM(CASE WHEN t.Powerball2 = n.Number THEN 1 ELSE 0 END) AS Powerball2,
+    SUM(CASE WHEN t.Powerball3 = n.Number THEN 1 ELSE 0 END) AS Powerball3,
+    SUM(CASE WHEN t.Powerball4 = n.Number THEN 1 ELSE 0 END) AS Powerball4,
+	SUM(CASE WHEN t.Powerball5 = n.Number THEN 1 ELSE 0 END) AS Powerball5,
+	SUM(CASE WHEN t.num6 = n.Number THEN 1 ELSE 0 END) AS num6
+FROM AllNumbers n
+LEFT JOIN PowerballNumbers t
+ON n.Number IN (t.Powerball1, t.Powerball2, t.Powerball3, t.Powerball4,t.Powerball5, t.num6)
+GROUP BY n.Number
+ORDER BY n.Number;
+
