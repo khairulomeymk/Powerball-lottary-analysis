@@ -1,128 +1,34 @@
-# Powerball-lottary-analysis
-use Lotarypowerball
+This series of SQL queries are related to the analysis of Powerball lottery data stored in a database named Lotarypowerball. Here's a summary of what each section of the code is doing:
 
-SELECT TOP (1000) [Draw Date]
-      ,[Winning Numbers]
-      ,[Multiplier]
-  FROM [Lotarypowerball].[dbo].[PowerballWinning]
+Section 1:
+The first query selects the draw date, winning numbers, and multiplier from the PowerballWinning table for the first 1000 records after the year 2019.
+
+Section 2:
+This section extracts individual Powerball numbers (1 to 5) and an additional number (num6) from the Winning Numbers column and stores them in a new table called PowerballNumbers. This makes it easier to analyze and query individual numbers.
+
+Section 3:
+Calculates the maximum and minimum occurrences of each Powerball number from PowerballNumbers since January 2019.
+
+Section 4:
+Selects all data from the PowerballNumbers table.
+
+Section 5:
+Counts the occurrences of Powerball numbers 1 and 2 in the PowerballNumbers table, grouping the results by each number.
+
+Section 6:
+Unpivots the data from PowerballNumbers to get a count of occurrences for each individual Powerball number. The results are ordered by number and count in descending order.
+
+Section 7:
+Performs a similar unpivoting operation as Section 6 but without sorting the results.
+
+Section 8:
+Assigns a unique number to each row in the PowerballNumbers table and calculates the occurrences of each Powerball number (1 to 5) and num6.
+
+Section 9:
+Generates a list of numbers from 1 to 69 and counts the occurrences of each number in the PowerballNumbers table.
+
+Each section provides a different perspective on the Powerball lottery data, allowing for various analyses such as finding the most and least common numbers, counting occurrences, and preparing the data for further analysis.
 
 
-  select * from PowerballWinning 
-  where convert(date,[Draw Date]) >= '01/01/2019'
 
- select [Draw Date], [Winning Numbers] ,SUBSTRING([Winning Numbers], 1, CHARINDEX(' ', [Winning Numbers]) - 1) AS Powerball1,
-   SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1, CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) - CHARINDEX(' ', [Winning Numbers]) - 1) AS Powerball2,
-    SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1, CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) - CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) - 1) AS Powerball3,
-    SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1, CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) - CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) - 1) AS Powerball4,
-    SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) + 1, CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) + 1) - CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) - 1) AS Powerball5,
-    SUBSTRING([Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers], CHARINDEX(' ', [Winning Numbers]) + 1) + 1) + 1) + 1) + 1, LEN([Winning Numbers])) AS num6, Multiplier
-  into PowerballNumbers
-  from PowerballWinning
-
-  select max(powerball1), max(powerball1), max(Powerball2),max(Powerball3),max(Powerball4),max(Powerball5), max(num6), 
-  min(powerball1), min(powerball1), min(Powerball2),min(Powerball3),min(Powerball4),min(Powerball5), min(num6)
-  from PowerballNumbers
-  where convert(date,[Draw Date]) >= '01/01/2019' 
-  
-  select * from PowerballNumbers
-
-  select count(Powerball1), count(Powerball2) from PowerballNumbers
-  group by Powerball1, Powerball2
-
-  SELECT Number, COUNT(*) as Count
-FROM (
-    SELECT Powerball1 as Number FROM PowerballNumbers
-    UNION ALL
-    SELECT Powerball2 FROM PowerballNumbers
-    UNION ALL
-    SELECT Powerball3 FROM PowerballNumbers
-    UNION ALL
-    SELECT Powerball4 FROM PowerballNumbers
-    UNION ALL
-    SELECT Powerball5 FROM PowerballNumbers
-    UNION ALL
-    SELECT num6 FROM PowerballNumbers
-) AS UnpivotedData
-GROUP BY Number
-ORDER BY Count DESC;
-
-SELECT Powerball1 as Number, COUNT(*) as Count
-FROM PowerballNumbers
-GROUP BY Powerball1
-
-UNION ALL
-
-SELECT Powerball2 as Number, COUNT(*) as Count
-FROM PowerballNumbers
-GROUP BY Powerball2
-
-UNION ALL
-
-SELECT Powerball3 as Number, COUNT(*) as Count
-FROM PowerballNumbers
-GROUP BY Powerball3
-
-UNION ALL
-
-SELECT Powerball4 as Number, COUNT(*) as Count
-FROM PowerballNumbers
-GROUP BY Powerball4
-
-UNION ALL
-
-SELECT Powerball5 as Number, COUNT(*) as Count
-FROM PowerballNumbers
-GROUP BY Powerball5
-
-UNION ALL
-
-SELECT num6 as Number, COUNT(*) as Count
-FROM PowerballNumbers
-GROUP BY num6
-
-ORDER BY Number, Count DESC;
-
-SELECT Number, COUNT(*) AS Count
-FROM (
-    SELECT Powerball1, Powerball2, Powerball3, Powerball4, Powerball5, num6
-    FROM PowerballNumbers
-) AS Source
-UNPIVOT (
-    Number FOR Numbers IN (Powerball1, Powerball2, Powerball3, Powerball4, Powerball5, num6)
-) AS UnpivotedData
-GROUP BY Number
-ORDER BY Number;
-
-SELECT
-    ROW_NUMBER() OVER (ORDER BY Powerball1) AS Number,
-    Powerball1,
-    Powerball2,
-    Powerball3,
-    Powerball4,
-	Powerball5,
-	num6
-FROM PowerballNumbers
-ORDER BY Number;
-
-WITH AllNumbers AS (
-  SELECT 1 AS Number
-  UNION ALL
-  SELECT Number + 1
-  FROM AllNumbers
-  WHERE Number < 69
-)
-
-SELECT
-    n.Number,
-    SUM(CASE WHEN t.Powerball1 = n.Number THEN 1 ELSE 0 END) AS Powerball1,
-    SUM(CASE WHEN t.Powerball2 = n.Number THEN 1 ELSE 0 END) AS Powerball2,
-    SUM(CASE WHEN t.Powerball3 = n.Number THEN 1 ELSE 0 END) AS Powerball3,
-    SUM(CASE WHEN t.Powerball4 = n.Number THEN 1 ELSE 0 END) AS Powerball4,
-	SUM(CASE WHEN t.Powerball5 = n.Number THEN 1 ELSE 0 END) AS Powerball5,
-	SUM(CASE WHEN t.num6 = n.Number THEN 1 ELSE 0 END) AS num6
-FROM AllNumbers n
-LEFT JOIN PowerballNumbers t
-ON n.Number IN (t.Powerball1, t.Powerball2, t.Powerball3, t.Powerball4,t.Powerball5, t.num6)
-GROUP BY n.Number
-ORDER BY n.Number;
 
